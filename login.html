@@ -26,6 +26,124 @@ permalink: /login/index.html
     </form>
 </div>
 
+<!-- Debug Panel -->
+<style>
+#debug-toggle { position:fixed; bottom:0.5rem; right:0.5rem; z-index:9999; }
+#debug-panel { position:fixed; bottom:0; left:0; right:0; max-height:45vh; background:#111; color:#eee; font:12px/1.3 monospace; border-top:2px solid #444; display:none; z-index:9998; }
+#debug-panel.active { display:block; }
+#debug-panel header { display:flex; gap:.5rem; align-items:center; padding:4px 8px; background:#222; border-bottom:1px solid #333; }
+#debug-panel button { font-size:11px; }
+#debug-log { overflow:auto; padding:6px 8px; white-space:pre-wrap; word-break:break-word; }
+.debug-line { border-left:3px solid transparent; padding-left:4px; margin:0 0 2px; }
+.debug-out { border-color:#4caf50; }
+.debug-err { border-color:#f44336; color:#ff8a80; }
+.debug-warn { border-color:#ff9800; color:#ffd180; }
+.debug-fetch { border-color:#2196f3; }
+.debug-meta { opacity:.7; }
+</style>
+<button id="debug-toggle" type="button">Show Debug</button>
+<div id="debug-panel">
+  <header>
+    <strong style="flex:1">Debug Stream</strong>
+    <span id="debug-stats" class="debug-meta"></span>
+    <button type="button" id="debug-copy">Copy</button>
+    <button type="button" id="debug-clear">Clear</button>
+    <button type="button" id="debug-close">Close</button>
+  </header>
+  <div id="debug-log"></div>
+</div>
+
+<script>
+// ---- Realtime debug instrumentation ----
+(function(){
+  const maxLines = 500;
+  const logEl = () => document.getElementById('debug-log');
+  const statsEl = () => document.getElementById('debug-stats');
+  let counts = { out:0, err:0, warn:0, fetch:0 };
+  function updateStats(){
+    if (statsEl()) statsEl().textContent = `log:${counts.out} warn:${counts.warn} err:${counts.err} net:${counts.fetch}`;
+  }
+  function sanitize(v){
+    try { if (typeof v === 'string') { return v.replace(/(Bearer|apikey)\s+([A-Za-z0-9\._-]+)/gi,'$1 ***'); } } catch(e){}
+    return v;
+  }
+  function append(type, parts){
+    const el = logEl(); if(!el) return;
+    counts[type]++;
+    const line = document.createElement('div');
+    line.className = `debug-line debug-${type}`;
+    const time = new Date().toISOString().split('T')[1].replace('Z','');
+    const text = parts.map(p=>{
+      if (p instanceof Error) return (p.stack||p.message);
+      if (typeof p === 'object') { try { return JSON.stringify(p, (k,v)=> (typeof v === 'string'? sanitize(v): v), 2); } catch(e){ return '[Unserializable Object]'; } }
+      return sanitize(String(p));
+    }).join(' ');
+    line.textContent = `[${time}] ${text}`;
+    el.appendChild(line);
+    // Trim
+    while(el.children.length > maxLines) el.removeChild(el.firstChild);
+    // Auto scroll
+    el.scrollTop = el.scrollHeight;
+    updateStats();
+  }
+  // Patch console
+  ['log','info'].forEach(fn=>{
+    const orig = console[fn];
+    console[fn] = function(){ append('out', Array.from(arguments)); return orig.apply(this, arguments); };
+  });
+  ['error'].forEach(fn=>{
+    const orig = console[fn];
+    console[fn] = function(){ append('err', Array.from(arguments)); return orig.apply(this, arguments); };
+  });
+  ['warn'].forEach(fn=>{
+    const orig = console[fn];
+    console[fn] = function(){ append('warn', Array.from(arguments)); return orig.apply(this, arguments); };
+  });
+  // Patch fetch for REST trace
+  const originalFetch = window.fetch;
+  window.fetch = async function(input, init){
+    const reqStart = performance.now();
+    let url = (typeof input === 'string') ? input : (input && input.url);
+    const method = (init && init.method) || (input && input.method) || 'GET';
+    append('fetch',[`→ ${method} ${url}`]);
+    try {
+      const resp = await originalFetch.apply(this, arguments);
+      const dur = (performance.now()-reqStart).toFixed(1);
+      const clone = resp.clone();
+      let bodySnippet = '';
+      // Attempt to read JSON small payloads
+      try {
+        const ct = resp.headers.get('content-type')||'';
+        if (ct.includes('application/json')) {
+          const txt = await clone.text();
+            bodySnippet = ' body=' + txt.slice(0,300) + (txt.length>300?'…':'');
+        }
+      } catch(e){ /* ignore */ }
+      append('fetch',[`← ${method} ${url} ${resp.status} ${resp.statusText} (${dur}ms)${bodySnippet}`]);
+      return resp;
+    } catch(err){
+      const dur = (performance.now()-reqStart).toFixed(1);
+      append('err',[`✗ ${method} ${url} (${dur}ms)`, err]);
+      throw err;
+    }
+  };
+  // UI controls
+  document.addEventListener('DOMContentLoaded', () => {
+    const panel = document.getElementById('debug-panel');
+    const toggle = document.getElementById('debug-toggle');
+    const closeBtn = document.getElementById('debug-close');
+    const clearBtn = document.getElementById('debug-clear');
+    const copyBtn = document.getElementById('debug-copy');
+    function show(){ panel.classList.add('active'); toggle.textContent='Hide Debug'; }
+    function hide(){ panel.classList.remove('active'); toggle.textContent='Show Debug'; }
+    toggle.addEventListener('click', ()=> panel.classList.contains('active')? hide(): show());
+    closeBtn.addEventListener('click', hide);
+    clearBtn.addEventListener('click', ()=> { logEl().innerHTML=''; counts={out:0,err:0,warn:0,fetch:0}; updateStats(); });
+    copyBtn.addEventListener('click', ()=> { const tmp=[]; logEl().querySelectorAll('.debug-line').forEach(l=>tmp.push(l.textContent)); navigator.clipboard.writeText(tmp.join('\n')).then(()=>append('out',['[debug] log copied to clipboard'])).catch(e=>append('err',['[debug] copy failed',e])); });
+  });
+})();
+</script>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const loginForm = document.getElementById('login-form');
