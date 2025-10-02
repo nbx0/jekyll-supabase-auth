@@ -1,0 +1,19 @@
+# Site settings
+title: Test Supabase Site
+description: A Jekyll site with Supabase authentication
+baseurl: ""
+url: "https://nbx0.github.io"
+
+# Build settings
+markdown: kramdown
+theme: minima
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .bundle
+  - .git
+  - .gitignore

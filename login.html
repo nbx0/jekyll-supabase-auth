@@ -1,0 +1,97 @@
+---
+layout: default
+title: Login
+---
+
+<div class="login-container">
+    <h2>Login</h2>
+    
+    <div id="error-message" class="error-message"></div>
+    <div id="success-message" class="success-message"></div>
+    
+    <form id="login-form">
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        
+        <button type="submit" class="btn">Login</button>
+        <button type="button" class="btn btn-secondary" id="signup-btn">Sign Up</button>
+    </form>
+</div>
+
+<script>
+    // Disable auth check on login page
+    document.addEventListener('DOMContentLoaded', () => {
+        const loginForm = document.getElementById('login-form');
+        const signupBtn = document.getElementById('signup-btn');
+        const errorMessage = document.getElementById('error-message');
+        const successMessage = document.getElementById('success-message');
+        
+        // Override checkAuth to not redirect from login page
+        checkAuth = async function() {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session) {
+                // User is authenticated, redirect to home
+                window.location.href = '/';
+            }
+        };
+        
+        checkAuth();
+        
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            const result = await handleLogin(email, password);
+            
+            if (result.success) {
+                successMessage.textContent = 'Login successful! Redirecting...';
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
+            } else {
+                errorMessage.textContent = result.error;
+                errorMessage.style.display = 'block';
+            }
+        });
+        
+        signupBtn.addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                errorMessage.textContent = 'Please enter email and password';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            const result = await handleSignup(email, password);
+            
+            if (result.success) {
+                successMessage.textContent = 'Signup successful! Please check your email to confirm your account. You can now login.';
+                successMessage.style.display = 'block';
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+            } else {
+                errorMessage.textContent = result.error;
+                errorMessage.style.display = 'block';
+            }
+        });
+    });
+</script>
