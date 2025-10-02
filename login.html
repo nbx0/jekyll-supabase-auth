@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Login
+permalink: /login/index.html
 ---
 
 <div class="login-container">
@@ -26,20 +27,17 @@ title: Login
 </div>
 
 <script>
-    // Disable auth check on login page
     document.addEventListener('DOMContentLoaded', () => {
         const loginForm = document.getElementById('login-form');
         const signupBtn = document.getElementById('signup-btn');
         const errorMessage = document.getElementById('error-message');
         const successMessage = document.getElementById('success-message');
         
-        // Override checkAuth to not redirect from login page
+        // Override checkAuth to only redirect if already logged in
         checkAuth = async function() {
             const { data: { session } } = await supabase.auth.getSession();
-            
             if (session) {
-                // User is authenticated, redirect to home
-                window.location.href = '/';
+                window.location.href = siteUrl('/');
             }
         };
         
@@ -47,21 +45,15 @@ title: Login
         
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            
             errorMessage.style.display = 'none';
             successMessage.style.display = 'none';
-            
             const result = await handleLogin(email, password);
-            
             if (result.success) {
                 successMessage.textContent = 'Login successful! Redirecting...';
                 successMessage.style.display = 'block';
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 1000);
+                setTimeout(() => { window.location.href = siteUrl('/'); }, 800);
             } else {
                 errorMessage.textContent = result.error;
                 errorMessage.style.display = 'block';
@@ -71,20 +63,16 @@ title: Login
         signupBtn.addEventListener('click', async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            
             if (!email || !password) {
                 errorMessage.textContent = 'Please enter email and password';
                 errorMessage.style.display = 'block';
                 return;
             }
-            
             errorMessage.style.display = 'none';
             successMessage.style.display = 'none';
-            
             const result = await handleSignup(email, password);
-            
             if (result.success) {
-                successMessage.textContent = 'Signup successful! Please check your email to confirm your account. You can now login.';
+                successMessage.textContent = 'Signup successful! Check your email to confirm your account.';
                 successMessage.style.display = 'block';
                 document.getElementById('email').value = '';
                 document.getElementById('password').value = '';

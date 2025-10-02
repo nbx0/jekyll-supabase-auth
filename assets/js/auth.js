@@ -5,25 +5,30 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Helper to build site-relative URLs considering baseurl
+function siteUrl(path) {
+    const base = (window.BASE_URL || '').replace(/\/$/, '');
+    const p = path.startsWith('/') ? path : '/' + path;
+    return base + p;
+}
+
 // Check authentication status
 async function checkAuth() {
     const { data: { session } } = await supabase.auth.getSession();
-    
+    const pathname = window.location.pathname;
+    const loginPaths = [siteUrl('/login.html'), siteUrl('/login'), siteUrl('/login/')];
+
     if (session) {
         // User is authenticated
         showAuthenticatedState(session.user);
-        
-        // If on login page, redirect to home
-        if (window.location.pathname.endsWith('/login.html') || window.location.pathname.endsWith('/login')) {
-            window.location.href = '/';
+        if (loginPaths.includes(pathname)) {
+            window.location.href = siteUrl('/');
         }
     } else {
         // User is not authenticated
         showUnauthenticatedState();
-        
-        // If not on login page, redirect to login
-        if (!window.location.pathname.endsWith('/login.html') && !window.location.pathname.endsWith('/login')) {
-            window.location.href = '/login.html';
+        if (!loginPaths.includes(pathname)) {
+            window.location.href = siteUrl('/login/');
         }
     }
 }
@@ -62,7 +67,7 @@ async function handleLogout() {
         console.error('Error logging out:', error);
         alert('Error logging out');
     } else {
-        window.location.href = '/login.html';
+        window.location.href = siteUrl('/login/');
     }
 }
 
