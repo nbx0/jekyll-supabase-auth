@@ -1,7 +1,7 @@
 # Site settings
 title: Test Supabase Site
 description: A Jekyll site with Supabase authentication
-baseurl: ""
+baseurl: "/test-supabase"  # Updated so project pages resolve assets/pages
 url: "https://nbx0.github.io"
 
 # Build settings

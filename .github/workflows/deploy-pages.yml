@@ -1,4 +1,4 @@
-name: Deploy Jekyll site to GitHub Pages
+name: Deploy site to GitHub Pages
 
 on:
   push:
@@ -30,9 +30,16 @@ jobs:
         with:
           bundler-cache: true
 
-      - name: Build site with Jekyll
+      - name: Build with Jekyll
+        env:
+          JEKYLL_ENV: production
         run: |
           bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
+          echo "Build output:" && ls -1 _site | head -20
+          if [ ! -f _site/login/index.html ] && [ -f login.html ]; then
+            echo "WARNING: login.html not processed as expected."
+            grep -n "layout:" login.html || true
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
