@@ -87,18 +87,30 @@ async function handleLogin(email, password) {
 }
 
 // Handle signup
-async function handleSignup(email, password) {
-    const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password
-    });
-    
-    if (error) {
-        console.error('Error signing up:', error);
-        return { success: false, error: error.message };
+async function handleSignup(email, password, meta = {}) {
+    try {
+        const { data, error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    full_name: meta.full_name || '',
+                    city: meta.city || '',
+                    country: meta.country || '',
+                    laboratory_name: meta.laboratory_name || ''
+                }
+            }
+        });
+        if (error) {
+            console.error('Error signing up:', error);
+            return { success: false, error: error.message };
+        }
+        console.log('Signup success:', data);
+        return { success: true, data };
+    } catch (e) {
+        console.error('Unexpected signup failure:', e);
+        return { success: false, error: e.message || 'Unexpected error' };
     }
-    
-    return { success: true, data };
 }
 
 // Initialize on page load
