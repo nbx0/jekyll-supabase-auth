@@ -113,6 +113,40 @@ async function handleSignup(email, password, meta = {}) {
     }
 }
 
+// Password reset (request email)
+async function requestPasswordReset(email) {
+    try {
+        const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + siteUrl('/login/')
+        });
+        if (error) {
+            console.error('Error requesting password reset:', error);
+            return { success: false, error: error.message };
+        }
+        console.log('Password reset email sent:', data);
+        return { success: true, data };
+    } catch (e) {
+        console.error('Unexpected reset request failure:', e);
+        return { success: false, error: e.message || 'Unexpected error' };
+    }
+}
+
+// Complete password update after recovery link
+async function updatePassword(newPassword) {
+    try {
+        const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) {
+            console.error('Error updating password:', error);
+            return { success: false, error: error.message };
+        }
+        console.log('Password updated:', data);
+        return { success: true, data };
+    } catch (e) {
+        console.error('Unexpected password update failure:', e);
+        return { success: false, error: e.message || 'Unexpected error' };
+    }
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();

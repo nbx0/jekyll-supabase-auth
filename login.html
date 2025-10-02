@@ -5,7 +5,7 @@ permalink: /login/index.html
 ---
 
 <div class="login-container">
-    <h2>Login</h2>
+    <h2 id="form-title">Login</h2>
     
     <div id="error-message" class="error-message"></div>
     <div id="success-message" class="success-message"></div>
@@ -16,30 +16,58 @@ permalink: /login/index.html
             <input type="email" id="email" name="email" required>
         </div>
         
-        <div class="form-group">
+        <div class="form-group" id="password-wrapper">
             <label for="password">Password</label>
             <input type="password" id="password" name="password" required>
         </div>
 
-        <div class="form-group">
-            <label for="full_name">Full Name</label>
-            <input type="text" id="full_name" name="full_name" placeholder="Full Name">
+        <!-- Signup-only extra fields -->
+        <div id="signup-extra" style="display:none;">
+            <div class="form-group">
+                <label for="full_name">Full Name</label>
+                <input type="text" id="full_name" name="full_name" placeholder="Full Name">
+            </div>
+            <div class="form-group">
+                <label for="city">City</label>
+                <input type="text" id="city" name="city" placeholder="City">
+            </div>
+            <div class="form-group">
+                <label for="country">Country</label>
+                <input type="text" id="country" name="country" placeholder="Country">
+            </div>
+            <div class="form-group">
+                <label for="laboratory_name">Laboratory Name</label>
+                <input type="text" id="laboratory_name" name="laboratory_name" placeholder="Laboratory Name">
+            </div>
         </div>
-        <div class="form-group">
-            <label for="city">City</label>
-            <input type="text" id="city" name="city" placeholder="City">
+
+        <!-- Forgot password link -->
+        <div class="form-group" id="forgot-row" style="margin-top:-6px;">
+            <small><a href="#" id="forgot-link">Forgot password?</a></small>
         </div>
-        <div class="form-group">
-            <label for="country">Country</label>
-            <input type="text" id="country" name="country" placeholder="Country">
+
+        <!-- Reset password request section -->
+        <div id="reset-request" style="display:none;">
+            <p style="font-size:0.9rem;">Enter your account email and we will send a reset link.</p>
+            <button type="button" class="btn" id="send-reset">Send Reset Email</button>
+            <button type="button" class="btn btn-secondary" id="cancel-reset">Cancel</button>
+            <hr/>
         </div>
-        <div class="form-group">
-            <label for="laboratory_name">Laboratory Name</label>
-            <input type="text" id="laboratory_name" name="laboratory_name" placeholder="Laboratory Name">
+
+        <!-- Password update section (after recovery link) -->
+        <div id="reset-complete" style="display:none;">
+            <div class="form-group">
+                <label for="new_password">New Password</label>
+                <input type="password" id="new_password" name="new_password" minlength="6" placeholder="New Password">
+            </div>
+            <button type="button" class="btn" id="apply-new-password">Update Password</button>
+            <hr/>
         </div>
         
-        <button type="submit" class="btn">Login</button>
-        <button type="button" class="btn btn-secondary" id="signup-btn">Sign Up</button>
+        <div class="form-actions" style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+            <button type="submit" class="btn" id="primary-action">Login</button>
+            <button type="button" class="btn btn-secondary" id="toggle-mode">Need an account? Sign Up</button>
+        </div>
     </form>
 </div>
 
@@ -162,65 +190,169 @@ permalink: /login/index.html
 </script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const loginForm = document.getElementById('login-form');
-        const signupBtn = document.getElementById('signup-btn');
-        const errorMessage = document.getElementById('error-message');
-        const successMessage = document.getElementById('success-message');
-        
-        // Override checkAuth to only redirect if already logged in
-        checkAuth = async function() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                window.location.href = siteUrl('/');
-            }
-        };
-        
-        checkAuth();
-        
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-            const result = await handleLogin(email, password);
-            if (result.success) {
-                successMessage.textContent = 'Login successful! Redirecting...';
-                successMessage.style.display = 'block';
-                setTimeout(() => { window.location.href = siteUrl('/'); }, 800);
-            } else {
-                errorMessage.textContent = result.error;
-                errorMessage.style.display = 'block';
-            }
-        });
-        
-        signupBtn.addEventListener('click', async () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+// Mode + reset logic
+ document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('login-form');
+    const errorMessage = document.getElementById('error-message');
+    const successMessage = document.getElementById('success-message');
+    const signupExtra = document.getElementById('signup-extra');
+    const toggleModeBtn = document.getElementById('toggle-mode');
+    const primaryActionBtn = document.getElementById('primary-action');
+    const titleEl = document.getElementById('form-title');
+    const forgotLink = document.getElementById('forgot-link');
+    const resetRequest = document.getElementById('reset-request');
+    const resetComplete = document.getElementById('reset-complete');
+    const sendResetBtn = document.getElementById('send-reset');
+    const cancelResetBtn = document.getElementById('cancel-reset');
+    const applyNewPasswordBtn = document.getElementById('apply-new-password');
+
+    let signupMode = false;
+
+    function clearMessages(){
+        errorMessage.style.display='none';
+        successMessage.style.display='none';
+        errorMessage.textContent='';
+        successMessage.textContent='';
+    }
+
+    function setMode(mode){
+        signupMode = mode;
+        clearMessages();
+        if (signupMode) {
+            signupExtra.style.display='block';
+            primaryActionBtn.textContent='Create Account';
+            toggleModeBtn.textContent='Already have an account? Login';
+            titleEl.textContent='Sign Up';
+            forgotLink.parentElement.style.display='none';
+        } else {
+            signupExtra.style.display='none';
+            primaryActionBtn.textContent='Login';
+            toggleModeBtn.textContent='Need an account? Sign Up';
+            titleEl.textContent='Login';
+            forgotLink.parentElement.style.display='';
+        }
+    }
+
+    toggleModeBtn.addEventListener('click', () => setMode(!signupMode));
+
+    // Forgot password flow triggers
+    forgotLink.addEventListener('click', (e)=>{
+        e.preventDefault();
+        resetRequest.style.display='block';
+        resetComplete.style.display='none';
+        forgotLink.parentElement.style.display='none';
+        signupExtra.style.display='none';
+        primaryActionBtn.disabled=true;
+        toggleModeBtn.disabled=true;
+    });
+    cancelResetBtn.addEventListener('click', ()=>{
+        resetRequest.style.display='none';
+        resetComplete.style.display='none';
+        forgotLink.parentElement.style.display='';
+        primaryActionBtn.disabled=false;
+        toggleModeBtn.disabled=false;
+        clearMessages();
+    });
+
+    sendResetBtn.addEventListener('click', async ()=>{
+        clearMessages();
+        const email = document.getElementById('email').value.trim();
+        if(!email){
+            errorMessage.textContent='Enter your email first';
+            errorMessage.style.display='block';
+            return;
+        }
+        const res = await requestPasswordReset(email);
+        if(res.success){
+            successMessage.textContent='Reset email sent. Check your inbox.';
+            successMessage.style.display='block';
+        } else {
+            errorMessage.textContent=res.error;
+            errorMessage.style.display='block';
+        }
+    });
+
+    applyNewPasswordBtn.addEventListener('click', async ()=>{
+        clearMessages();
+        const newPass = document.getElementById('new_password').value;
+        if(!newPass || newPass.length<6){
+            errorMessage.textContent='Password must be at least 6 characters';
+            errorMessage.style.display='block';
+            return;
+        }
+        const res = await updatePassword(newPass);
+        if(res.success){
+            successMessage.textContent='Password updated. You can now login.';
+            successMessage.style.display='block';
+            document.getElementById('new_password').value='';
+            resetComplete.style.display='none';
+            primaryActionBtn.disabled=false;
+            toggleModeBtn.disabled=false;
+            forgotLink.parentElement.style.display='';
+        } else {
+            errorMessage.textContent=res.error;
+            errorMessage.style.display='block';
+        }
+    });
+
+    // Check for recovery type in URL (Supabase sends access_token & type=recovery)
+    const params = new URLSearchParams(window.location.hash.replace('#','?'));
+    if (params.get('type') === 'recovery') {
+        // Show password set form
+        resetComplete.style.display='block';
+        primaryActionBtn.disabled=true;
+        toggleModeBtn.disabled=true;
+        forgotLink.parentElement.style.display='none';
+        titleEl.textContent='Set New Password';
+    }
+
+    // Override checkAuth to only redirect if already logged in
+    checkAuth = async function() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            window.location.href = siteUrl('/');
+        }
+    };
+    checkAuth();
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearMessages();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        if (!email || !password) {
+            errorMessage.textContent='Email and password are required';
+            errorMessage.style.display='block';
+            return;
+        }
+        if (signupMode) {
             const meta = {
-                full_name: document.getElementById('full_name').value,
-                city: document.getElementById('city').value,
-                country: document.getElementById('country').value,
-                laboratory_name: document.getElementById('laboratory_name').value
+                full_name: document.getElementById('full_name').value.trim(),
+                city: document.getElementById('city').value.trim(),
+                country: document.getElementById('country').value.trim(),
+                laboratory_name: document.getElementById('laboratory_name').value.trim()
             };
-            if (!email || !password) {
-                errorMessage.textContent = 'Please enter email and password';
-                errorMessage.style.display = 'block';
-                return;
-            }
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
             const result = await handleSignup(email, password, meta);
             if (result.success) {
-                successMessage.textContent = 'Signup successful! Check your email to confirm your account.';
-                successMessage.style.display = 'block';
-                document.getElementById('email').value = '';
-                document.getElementById('password').value = '';
+                successMessage.textContent = 'Signup successful! Check your email to confirm your account, then login.';
+                successMessage.style.display='block';
+                setMode(false); // Return to login mode
+                document.getElementById('password').value='';
             } else {
                 errorMessage.textContent = result.error;
-                errorMessage.style.display = 'block';
+                errorMessage.style.display='block';
             }
-        });
+        } else {
+            const result = await handleLogin(email, password);
+            if (result.success) {
+                successMessage.textContent='Login successful! Redirecting...';
+                successMessage.style.display='block';
+                setTimeout(()=>{ window.location.href = siteUrl('/'); }, 800);
+            } else {
+                errorMessage.textContent=result.error;
+                errorMessage.style.display='block';
+            }
+        }
     });
+ });
 </script>
