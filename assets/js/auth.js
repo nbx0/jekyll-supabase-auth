@@ -116,9 +116,11 @@ async function handleSignup(email, password, meta = {}) {
 // Password reset (request email)
 async function requestPasswordReset(email) {
     try {
+        console.log('[auth] requestPasswordReset start', email);
         const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: window.location.origin + siteUrl('/login/')
         });
+        console.log('[auth] requestPasswordReset response', { data, error });
         if (error) {
             console.error('Error requesting password reset:', error);
             return { success: false, error: error.message };

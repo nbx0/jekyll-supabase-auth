@@ -262,13 +262,27 @@ permalink: /login/index.html
             errorMessage.style.display='block';
             return;
         }
-        const res = await requestPasswordReset(email);
-        if(res.success){
-            successMessage.textContent='Reset email sent. Check your inbox.';
-            successMessage.style.display='block';
-        } else {
-            errorMessage.textContent=res.error;
+        console.log('[reset] Sending password reset for', email);
+        sendResetBtn.disabled = true;
+        sendResetBtn.textContent = 'Sending...';
+        try {
+            const res = await requestPasswordReset(email);
+            if(res && res.success){
+                successMessage.textContent='Reset email sent. Check your inbox (and spam).';
+                successMessage.style.display='block';
+                console.log('[reset] Email dispatch success', res.data);
+            } else {
+                errorMessage.textContent = (res && res.error) || 'Unknown error';
+                errorMessage.style.display='block';
+                console.error('[reset] Failure', res);
+            }
+        } catch(e){
+            errorMessage.textContent = e.message || 'Network error';
             errorMessage.style.display='block';
+            console.error('[reset] Exception', e);
+        } finally {
+            sendResetBtn.disabled = false;
+            sendResetBtn.textContent = 'Send Reset Email';
         }
     });
 
