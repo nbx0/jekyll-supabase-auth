@@ -16,7 +16,10 @@ function siteUrl(path) {
 async function checkAuth() {
     const { data: { session } } = await supabase.auth.getSession();
     const pathname = window.location.pathname;
-    const loginPaths = [siteUrl('/login.html'), siteUrl('/login'), siteUrl('/login/')];
+    const loginPaths = [
+        siteUrl('/login.html'), siteUrl('/login'), siteUrl('/login/'),
+        siteUrl('/reset-password'), siteUrl('/reset-password/'), siteUrl('/reset-password.html')
+    ];
 
     if (session) {
         // User is authenticated
@@ -118,7 +121,7 @@ async function requestPasswordReset(email) {
     try {
         console.log('[auth] requestPasswordReset start', email);
         const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + siteUrl('/login/')
+            redirectTo: window.location.origin + siteUrl('/reset-password/')
         });
         console.log('[auth] requestPasswordReset response', { data, error });
         if (error) {
