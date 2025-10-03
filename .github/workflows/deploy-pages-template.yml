@@ -2,8 +2,7 @@ name: Deploy Jekyll site with Supabase Auth to GitHub Pages
 
 on:
   workflow_dispatch:  # Manual trigger
-  push:
-    branches: [ main ]  # Or your default branch
+
 
 permissions:
   contents: read
