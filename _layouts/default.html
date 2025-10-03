@@ -5,7 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page.title | default: site.title }}</title>
     <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
-    <script>window.BASE_URL='{{ site.baseurl }}';</script>
+    <script>window.BASE_URL='{{ site.baseurl }}';
+// Redirect hash auth flows (signup/recovery) that land at root domain without base path
+(function(){
+  var base='{{ site.baseurl }}';
+  if(base && base !== '/' && window.location.pathname === '/' && window.location.hash.indexOf('access_token=')!==-1){
+    // Preserve hash and avoid double slashes
+    var target=base.replace(/\/$/,'') + '/' + window.location.hash;
+    window.location.replace(target);
+  }
+})();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>

@@ -5,6 +5,15 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Early hash redirect guard (in case layout script missed)
+(function ensureBaseUrlForAuthHash(){
+  const base=(window.BASE_URL||'');
+  if(base && base !== '/' && window.location.pathname==='/' && window.location.hash.includes('access_token=')){
+     const target=base.replace(/\/$/,'') + '/' + window.location.hash;
+     window.location.replace(target);
+  }
+})();
+
 // Helper to build site-relative URLs considering baseurl
 function siteUrl(path) {
     const base = (window.BASE_URL || '').replace(/\/$/, '');

@@ -348,10 +348,22 @@ permalink: /login/index.html
             };
             const result = await handleSignup(email, password, meta);
             if (result.success) {
-                successMessage.textContent = 'Signup successful! Check your email to confirm your account, then login.';
+                // Determine if email confirmation required (no session returned)
+                let msg;
+                if (result.data && result.data.session) {
+                    msg = 'Account created and signed in successfully.';
+                } else {
+                    msg = `Confirmation email sent to ${email}. Please click the link in that email to activate your account, then return here to log in.`;
+                }
+                successMessage.textContent = msg;
                 successMessage.style.display='block';
-                setMode(false); // Return to login mode
+                // Clear sensitive fields but keep email so user knows where mail went
                 document.getElementById('password').value='';
+                document.getElementById('full_name').value='';
+                document.getElementById('city').value='';
+                document.getElementById('country').value='';
+                document.getElementById('laboratory_name').value='';
+                setMode(false); // Return to login mode
             } else {
                 errorMessage.textContent = result.error;
                 errorMessage.style.display='block';
