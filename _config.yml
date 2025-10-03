@@ -1,8 +1,29 @@
 # Site settings
-title: Test Supabase Site
-description: A Jekyll site with Supabase authentication
+title: Jekyll + Supabase Authentication
+description: Production-ready Jekyll static site with complete Supabase authentication system. Email/password login, signup, password reset, and protected pages.
 baseurl: "/jekyll-supabase-auth"  # Updated so project pages resolve assets/pages
 url: "https://nbx0.github.io"
+
+# SEO settings
+author: nbx0
+twitter:
+  username: nbx0
+  card: summary_large_image
+logo: /favicon.svg
+social:
+  name: Jekyll Supabase Auth
+  links:
+    - https://github.com/nbx0/jekyll-supabase-auth
+
+# Additional metadata
+lang: en
+timezone: America/New_York
+
+# Optional: Add your Google Analytics ID (e.g., G-XXXXXXXXXX or UA-XXXXXXXXX)
+# google_analytics: G-XXXXXXXXXX
+
+# Optional: Add your Supabase URL for DNS prefetch
+# supabase_url: https://xxxxxxxxxxxxx.supabase.co
 
 # Build settings
 markdown: kramdown

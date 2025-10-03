@@ -1,9 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ site.lang | default: 'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page.title | default: "Authentication" }}</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- Primary Meta Tags -->
+    <title>{{ page.title | default: "Authentication" }} | {{ site.title }}</title>
+    <meta name="title" content="{{ page.title | default: 'Authentication' }} | {{ site.title }}">
+    <meta name="description" content="{{ page.description | default: 'Secure authentication for Jekyll Supabase Auth' }}">
+    <meta name="robots" content="{{ page.robots | default: 'noindex, nofollow' }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ '/favicon.ico' | relative_url }}">
+    <link rel="icon" type="image/svg+xml" href="{{ '/favicon.svg' | relative_url }}">
+    
+    <!-- Styles -->
     <link rel="stylesheet" href="{{ '/assets/css/auth.css' | relative_url }}">
     <script>window.BASE_URL='{{ site.baseurl }}';
 {% if page.disable_auth_check %}

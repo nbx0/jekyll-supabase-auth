@@ -13,6 +13,7 @@ A production-ready Jekyll static site with complete Supabase authentication syst
 - [Deployment](#deployment)
 - [Integration Guide](#integration-guide)
 - [Customization](#customization)
+- [SEO Optimization](#seo-optimization)
 - [Troubleshooting](#troubleshooting)
 - [FAQ](#faq)
 
@@ -459,6 +460,281 @@ body:not(.auth-checked)::before {
     /* ... other styles ... */
 }
 ```
+
+---
+
+## 🔍 SEO Optimization
+
+This project includes comprehensive SEO optimization out of the box.
+
+### Built-in SEO Features
+
+#### ✅ Meta Tags
+- Primary meta tags (title, description, author, keywords)
+- Open Graph tags for Facebook/LinkedIn sharing
+- Twitter Card tags for Twitter sharing
+- Canonical URLs to prevent duplicate content
+- Robots meta tags for indexing control
+
+#### ✅ Structured Data
+- JSON-LD Schema.org markup
+- WebSite schema for search engines
+- Author information
+
+#### ✅ Performance
+- DNS prefetch for CDN and Supabase
+- Preconnect hints for faster loading
+- Optimized asset loading
+
+#### ✅ Sitemap & Robots
+- `sitemap.xml` - Auto-generated from pages
+- `robots.txt` - Controls crawler access
+- Auth pages excluded from indexing
+
+### Configuration
+
+#### Add Google Analytics
+
+Edit `_config.yml`:
+
+```yaml
+# Add your Google Analytics tracking ID
+google_analytics: G-XXXXXXXXXX  # or UA-XXXXXXXXX for older tracking
+```
+
+The tracking code:
+- Respects user privacy with IP anonymization
+- Uses secure cookies (SameSite=None;Secure)
+- Loads asynchronously for performance
+- Only loads if configured
+
+#### Customize SEO Per Page
+
+Add to any page's front matter:
+
+```yaml
+---
+layout: page
+title: Your Page Title
+description: Custom description for this specific page (max 160 characters)
+keywords: custom, keywords, for, this, page
+og_type: article  # or 'website'
+image: /path/to/social-share-image.jpg
+priority: 0.8  # Sitemap priority (0.0 to 1.0)
+changefreq: monthly  # How often page changes
+robots: noindex, nofollow  # Control indexing
+---
+```
+
+#### Social Media Preview Images
+
+Add a social share image to your site:
+
+1. Create an image (recommended: 1200x630px)
+2. Save to `/assets/images/og-image.jpg`
+3. Add to `_config.yml`:
+
+```yaml
+logo: /assets/images/og-image.jpg
+```
+
+Or per-page:
+
+```yaml
+---
+image: /assets/images/custom-page-image.jpg
+---
+```
+
+#### Update Site Metadata
+
+Edit `_config.yml` for site-wide SEO:
+
+```yaml
+title: Your Site Title
+description: >
+  Your comprehensive site description.
+  Make it compelling and under 160 characters.
+author: Your Name
+lang: en  # or 'es', 'fr', etc.
+
+# Social profiles
+twitter:
+  username: your_twitter_handle
+  card: summary_large_image  # or 'summary'
+  
+social:
+  name: Your Site Name
+  links:
+    - https://github.com/yourusername
+    - https://twitter.com/yourusername
+```
+
+### SEO Best Practices
+
+#### ✅ Page Titles
+- Keep under 60 characters
+- Include target keywords
+- Make unique per page
+- Use format: "Page Title | Site Title"
+
+#### ✅ Meta Descriptions
+- Keep between 120-160 characters
+- Include call-to-action
+- Use target keywords naturally
+- Unique per page
+
+#### ✅ Content Structure
+- Use proper heading hierarchy (H1 → H2 → H3)
+- Only one H1 per page
+- Include keywords in headings
+- Use descriptive link text
+
+#### ✅ URLs
+- Keep URLs short and descriptive
+- Use hyphens, not underscores
+- Lowercase only
+- Include target keyword if possible
+
+### Verify SEO Setup
+
+#### 1. Test Meta Tags
+
+Use online tools:
+- [Twitter Card Validator](https://cards-dev.twitter.com/validator)
+- [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/)
+- [LinkedIn Post Inspector](https://www.linkedin.com/post-inspector/)
+
+#### 2. Test Structured Data
+
+- [Google Rich Results Test](https://search.google.com/test/rich-results)
+- [Schema.org Validator](https://validator.schema.org/)
+
+#### 3. Check Sitemap
+
+Visit: `https://yourdomain.com/sitemap.xml`
+
+Verify:
+- All public pages are included
+- Auth pages are excluded
+- URLs are absolute
+
+#### 4. Verify robots.txt
+
+Visit: `https://yourdomain.com/robots.txt`
+
+Check:
+- Login/reset pages are disallowed
+- Sitemap URL is correct
+
+### Submit to Search Engines
+
+#### Google Search Console
+
+1. Go to [Google Search Console](https://search.google.com/search-console)
+2. Add your property
+3. Verify ownership (HTML file or DNS)
+4. Submit sitemap: `https://yourdomain.com/sitemap.xml`
+
+#### Bing Webmaster Tools
+
+1. Go to [Bing Webmaster Tools](https://www.bing.com/webmasters)
+2. Add your site
+3. Verify ownership
+4. Submit sitemap
+
+### Advanced SEO
+
+#### Add Breadcrumbs
+
+Create `_includes/breadcrumbs.html`:
+
+```html
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li><a href="{{ '/' | relative_url }}">Home</a></li>
+    {% if page.category %}
+    <li><a href="{{ page.category | relative_url }}">{{ page.category | capitalize }}</a></li>
+    {% endif %}
+    <li aria-current="page">{{ page.title }}</li>
+  </ol>
+</nav>
+```
+
+Include in your layout:
+
+```liquid
+{% include breadcrumbs.html %}
+```
+
+#### Add FAQ Schema
+
+For FAQ pages, add to front matter:
+
+```yaml
+---
+faq:
+  - question: "How do I reset my password?"
+    answer: "Click 'Forgot password' on the login page..."
+  - question: "Is my data secure?"
+    answer: "Yes, we use Supabase for secure authentication..."
+---
+```
+
+Create `_includes/faq-schema.html`:
+
+```html
+{% if page.faq %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% for item in page.faq %}
+    {
+      "@type": "Question",
+      "name": "{{ item.question }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{ item.answer }}"
+      }
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endif %}
+```
+
+#### Monitor Performance
+
+Use these tools:
+- [Google PageSpeed Insights](https://pagespeed.web.dev/)
+- [GTmetrix](https://gtmetrix.com/)
+- [WebPageTest](https://www.webpagetest.org/)
+
+Target scores:
+- PageSpeed: 90+ (mobile and desktop)
+- Core Web Vitals: All green
+- Load time: < 3 seconds
+
+### SEO Checklist
+
+- [ ] Site title and description in `_config.yml`
+- [ ] Unique title/description per page
+- [ ] Social media image (1200x630px)
+- [ ] Google Analytics configured (optional)
+- [ ] Sitemap accessible at `/sitemap.xml`
+- [ ] Robots.txt configured
+- [ ] Canonical URLs on all pages
+- [ ] Meta tags validated (Twitter, Facebook)
+- [ ] Structured data tested
+- [ ] Submitted to Google Search Console
+- [ ] Submitted to Bing Webmaster Tools
+- [ ] 404 page exists
+- [ ] Site loads over HTTPS
+- [ ] Mobile-friendly (responsive design)
+- [ ] Fast loading (< 3 seconds)
 
 ---
 

@@ -1,0 +1,14 @@
+---
+layout: null
+---
+# Robots.txt for {{ site.title }}
+User-agent: *
+Allow: /
+Disallow: /login/
+Disallow: /reset-password/
+Disallow: /auth-redirect.html
+Disallow: /redirect.html
+Disallow: /root-redirect.html
+
+# Sitemap
+Sitemap: {{ site.url }}{{ site.baseurl }}/sitemap.xml
