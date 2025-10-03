@@ -1,0 +1,226 @@
+---
+layout: auth
+title: Login
+permalink: /login/index.html
+---
+
+<div class="login-container">
+    <h2 id="form-title">Login</h2>
+    
+    <div id="error-message" class="error-message"></div>
+    <div id="success-message" class="success-message"></div>
+    
+    <form id="login-form">
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        
+        <div class="form-group" id="password-wrapper">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <!-- Signup-only extra fields -->
+        <div id="signup-extra" style="display:none;">
+            <div class="form-group">
+                <label for="full_name">Full Name</label>
+                <input type="text" id="full_name" name="full_name" placeholder="Full Name">
+            </div>
+            <div class="form-group">
+                <label for="city">City</label>
+                <input type="text" id="city" name="city" placeholder="City">
+            </div>
+            <div class="form-group">
+                <label for="country">Country</label>
+                <input type="text" id="country" name="country" placeholder="Country">
+            </div>
+            <div class="form-group">
+                <label for="laboratory_name">Laboratory Name</label>
+                <input type="text" id="laboratory_name" name="laboratory_name" placeholder="Laboratory Name">
+            </div>
+        </div>
+
+        <!-- Forgot password link -->
+        <div class="form-group" id="forgot-row" style="margin-top:-6px;">
+            <small><a href="#" id="forgot-link" class="auth-link" style="display:inline;">Forgot password?</a></small>
+        </div>
+
+        <!-- Reset password request section -->
+        <div id="reset-request" style="display:none;">
+            <p class="text-muted">Enter your account email and we will send a reset link.</p>
+            <button type="button" class="btn" id="send-reset">Send Reset Email</button>
+            <button type="button" class="btn btn-secondary" id="cancel-reset">Cancel</button>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn" id="primary-action">Login</button>
+            <button type="button" class="btn btn-secondary" id="toggle-mode">Need an account? Sign Up</button>
+        </div>
+    </form>
+</div>
+
+<script>
+(function(){
+  // Mode: login or signup
+  let isSignup = false;
+
+  // Elements
+  const formTitle = document.getElementById('form-title');
+  const errorEl = document.getElementById('error-message');
+  const successEl = document.getElementById('success-message');
+  const signupExtra = document.getElementById('signup-extra');
+  const form = document.getElementById('login-form');
+  const primaryBtn = document.getElementById('primary-action');
+  const toggleBtn = document.getElementById('toggle-mode');
+  const forgotRow = document.getElementById('forgot-row');
+  const forgotLink = document.getElementById('forgot-link');
+  const resetRequest = document.getElementById('reset-request');
+  const sendResetBtn = document.getElementById('send-reset');
+  const cancelResetBtn = document.getElementById('cancel-reset');
+
+  // Input fields
+  const emailInput = document.getElementById('email');
+  const passInput = document.getElementById('password');
+  const fullNameInput = document.getElementById('full_name');
+  const cityInput = document.getElementById('city');
+  const countryInput = document.getElementById('country');
+  const labNameInput = document.getElementById('laboratory_name');
+
+  function showError(msg){
+    errorEl.textContent = msg;
+    errorEl.style.display = 'block';
+    successEl.style.display = 'none';
+  }
+
+  function showSuccess(msg){
+    successEl.textContent = msg;
+    successEl.style.display = 'block';
+    errorEl.style.display = 'none';
+  }
+
+  function clearMessages(){
+    errorEl.style.display = 'none';
+    successEl.style.display = 'none';
+    errorEl.textContent = '';
+    successEl.textContent = '';
+  }
+
+  function setMode(signup){
+    isSignup = signup;
+    clearMessages();
+    if(isSignup){
+      formTitle.textContent = 'Sign Up';
+      signupExtra.style.display = 'block';
+      primaryBtn.textContent = 'Create Account';
+      toggleBtn.textContent = 'Have an account? Login';
+      forgotRow.style.display = 'none';
+    } else {
+      formTitle.textContent = 'Login';
+      signupExtra.style.display = 'none';
+      primaryBtn.textContent = 'Login';
+      toggleBtn.textContent = 'Need an account? Sign Up';
+      forgotRow.style.display = 'block';
+    }
+    resetRequest.style.display = 'none';
+  }
+
+  toggleBtn.addEventListener('click', ()=> setMode(!isSignup));
+
+  // Forgot password flow
+  forgotLink.addEventListener('click', (e)=>{
+    e.preventDefault();
+    clearMessages();
+    resetRequest.style.display = 'block';
+    forgotRow.style.display = 'none';
+  });
+
+  cancelResetBtn.addEventListener('click', ()=>{
+    resetRequest.style.display = 'none';
+    forgotRow.style.display = 'block';
+    clearMessages();
+  });
+
+  sendResetBtn.addEventListener('click', async ()=>{
+    clearMessages();
+    const email = emailInput.value.trim();
+    if(!email){
+      showError('Please enter your email address.');
+      return;
+    }
+    const originalText = sendResetBtn.textContent;
+    sendResetBtn.textContent = 'Sending...';
+    sendResetBtn.disabled = true;
+
+    const result = await requestPasswordReset(email);
+    
+    sendResetBtn.textContent = originalText;
+    sendResetBtn.disabled = false;
+
+    if(result.success){
+      showSuccess('Password reset email sent! Check your inbox.');
+      resetRequest.style.display = 'none';
+      forgotRow.style.display = 'block';
+    } else {
+      showError(result.error || 'Failed to send reset email.');
+    }
+  });
+
+  // Form submission
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    clearMessages();
+    
+    const email = emailInput.value.trim();
+    const password = passInput.value;
+
+    if(!email || !password){
+      showError('Email and password are required.');
+      return;
+    }
+
+    if(isSignup && password.length < 6){
+      showError('Password must be at least 6 characters.');
+      return;
+    }
+
+    const originalText = primaryBtn.textContent;
+    primaryBtn.textContent = isSignup ? 'Creating Account...' : 'Logging in...';
+    primaryBtn.disabled = true;
+
+    let result;
+    if(isSignup){
+      const metadata = {
+        full_name: fullNameInput.value.trim(),
+        city: cityInput.value.trim(),
+        country: countryInput.value.trim(),
+        laboratory_name: labNameInput.value.trim()
+      };
+      result = await handleSignup(email, password, metadata);
+    } else {
+      result = await handleLogin(email, password);
+    }
+
+    primaryBtn.textContent = originalText;
+    primaryBtn.disabled = false;
+
+    if(result.success){
+      if(isSignup){
+        const msg = 'Account created! Please check your email to confirm your account.';
+        setMode(false); // Return to login mode (clears messages)
+        // Show success message AFTER setMode
+        successMessage.textContent = msg;
+        successMessage.style.display='block';
+        form.reset();
+      } else {
+        // Login success - will auto-redirect via checkAuth
+        window.location.href = siteUrl('/');
+      }
+    } else {
+      showError(result.error || 'Authentication failed.');
+    }
+  });
+
+  setMode(false);
+})();
+</script>

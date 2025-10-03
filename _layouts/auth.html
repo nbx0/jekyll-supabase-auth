@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page.title | default: "Authentication" }}</title>
+    <link rel="stylesheet" href="{{ '/assets/css/auth.css' | relative_url }}">
+    <script>window.BASE_URL='{{ site.baseurl }}';</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <main>
+        {{ content }}
+    </main>
+    
+    <script src="{{ '/assets/js/auth.js' | relative_url }}"></script>
+</body>
+</html>

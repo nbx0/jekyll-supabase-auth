@@ -353,28 +353,53 @@ permalink: /login/index.html
                 laboratory_name: document.getElementById('laboratory_name').value.trim()
             };
             const result = await handleSignup(email, password, meta);
-            if (result.success) {
+            console.log('[signup] result:', result);
+            primaryActionBtn.disabled = false;
+            primaryActionBtn.textContent = originalText;
+            
+            if (result && result.success) {
+                // Check if user already exists (Supabase doesn't send email if already registered)
+                const userExists = result.data && result.data.user && 
+                                   result.data.user.identities && 
+                                   result.data.user.identities.length === 0;
+                
                 // Determine if email confirmation required (no session returned)
                 let msg;
-                if (result.data && result.data.session) {
+                if (userExists) {
+                    // User already registered - show helpful message
+                    msg = `An account with ${email} already exists. Please use the login form or reset your password if you've forgotten it.`;
+                    errorMessage.textContent = msg;
+                    errorMessage.style.display='block';
+                    console.log('[signup] User already exists');
+                } else if (result.data && result.data.session) {
                     msg = 'Account created and signed in successfully.';
+                    // Clear sensitive fields
+                    document.getElementById('password').value='';
+                    document.getElementById('full_name').value='';
+                    document.getElementById('city').value='';
+                    document.getElementById('country').value='';
+                    document.getElementById('laboratory_name').value='';
+                    setMode(false);
+                    successMessage.textContent = msg;
+                    successMessage.style.display='block';
+                    console.log('[signup] Auto-signed in');
                 } else {
-                    msg = `Confirmation email sent to ${email}. Please click the link in that email to activate your account, then return here to log in.`;
+                    msg = `Confirmation email sent to ${email}. Please check your inbox (and spam folder) and click the link to activate your account, then return here to log in.`;
+                    // Clear sensitive fields but keep email so user knows where mail went
+                    document.getElementById('password').value='';
+                    document.getElementById('full_name').value='';
+                    document.getElementById('city').value='';
+                    document.getElementById('country').value='';
+                    document.getElementById('laboratory_name').value='';
+                    setMode(false);
+                    successMessage.textContent = msg;
+                    successMessage.style.display='block';
+                    console.log('[signup] Confirmation email sent');
                 }
-                successMessage.textContent = msg;
-                successMessage.style.display='block';
-                // Clear sensitive fields but keep email so user knows where mail went
-                document.getElementById('password').value='';
-                document.getElementById('full_name').value='';
-                document.getElementById('city').value='';
-                document.getElementById('country').value='';
-                document.getElementById('laboratory_name').value='';
-                setMode(false); // Return to login mode
             } else {
-                errorMessage.textContent = result.error;
+                console.log('[signup] Error:', result ? result.error : 'No result');
+                errorMessage.textContent = (result && result.error) || 'Signup failed';
                 errorMessage.style.display='block';
-                primaryActionBtn.disabled = false;
-                primaryActionBtn.textContent = originalText;
             }
         } else {
             const result = await handleLogin(email, password);
