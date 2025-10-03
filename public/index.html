@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Redirect Handler</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f4f4f4;
+        }
+        .message {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        // This page handles Supabase auth redirects that land at the root without baseurl
+        (function(){
+            console.log('[root redirect] Starting redirect handler');
+            console.log('[root redirect] Current URL:', window.location.href);
+            console.log('[root redirect] Hash:', window.location.hash);
+            
+            var baseurl = '/jekyll-supabase-auth';
+            var hash = window.location.hash;
+            
+            // Check if this is an auth redirect (signup confirmation or password reset)
+            if (hash && hash.indexOf('access_token=') !== -1) {
+                var hashParams = new URLSearchParams(hash.substring(1));
+                var type = hashParams.get('type');
+                
+                console.log('[root redirect] Auth type:', type);
+                
+                var target;
+                if (type === 'recovery') {
+                    // Password reset link
+                    target = baseurl + '/reset-password/' + hash;
+                    console.log('[root redirect] Redirecting to reset-password');
+                } else {
+                    // Signup confirmation or other auth flow
+                    target = baseurl + '/' + hash;
+                    console.log('[root redirect] Redirecting to home');
+                }
+                
+                console.log('[root redirect] Target:', target);
+                window.location.replace(target);
+            } else {
+                // No auth tokens, just redirect to base URL
+                console.log('[root redirect] No auth tokens, redirecting to baseurl');
+                window.location.replace(baseurl + '/');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="message">
+        <div class="spinner"></div>
+        <p>Redirecting...</p>
+    </div>
+</body>
+</html>

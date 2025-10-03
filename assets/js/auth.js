@@ -122,10 +122,17 @@ async function handleLogout() {
     
     if (error) {
         console.error('Error logging out:', error);
-        alert('Error logging out: ' + error.message);
-        if (logoutBtn) {
-            logoutBtn.disabled = false;
-            logoutBtn.textContent = 'Logout';
+        // If session is already missing, that's fine - just redirect to login
+        if (error.message && error.message.includes('session missing')) {
+            console.log('Session already cleared, redirecting to login...');
+            window.location.href = siteUrl('/login/');
+        } else {
+            // Only show alert for unexpected errors
+            alert('Error logging out: ' + error.message);
+            if (logoutBtn) {
+                logoutBtn.disabled = false;
+                logoutBtn.textContent = 'Logout';
+            }
         }
     } else {
         console.log('Logout successful, redirecting...');

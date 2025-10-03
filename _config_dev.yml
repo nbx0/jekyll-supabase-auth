@@ -1,0 +1,6 @@
+# Development configuration
+# Run with: bundle exec jekyll serve --config _config.yml,_config_dev.yml
+
+# Override baseurl for local development (empty string for root-level serving)
+baseurl: ""
+url: "http://127.0.0.1:4000"

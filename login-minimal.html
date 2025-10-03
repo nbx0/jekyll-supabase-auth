@@ -25,19 +25,19 @@ disable_auth_check: true
         <!-- Signup-only extra fields -->
         <div id="signup-extra" style="display:none;">
             <div class="form-group">
-                <label for="full_name">Full Name</label>
+                <label for="full_name">Full Name <span style="color: #e74c3c;">*</span></label>
                 <input type="text" id="full_name" name="full_name" placeholder="Full Name">
             </div>
             <div class="form-group">
-                <label for="city">City</label>
+                <label for="city">City <span style="color: #e74c3c;">*</span></label>
                 <input type="text" id="city" name="city" placeholder="City">
             </div>
             <div class="form-group">
-                <label for="country">Country</label>
+                <label for="country">Country <span style="color: #e74c3c;">*</span></label>
                 <input type="text" id="country" name="country" placeholder="Country">
             </div>
             <div class="form-group">
-                <label for="laboratory_name">Laboratory Name</label>
+                <label for="laboratory_name">Laboratory Name <span style="color: #e74c3c;">*</span></label>
                 <input type="text" id="laboratory_name" name="laboratory_name" placeholder="Laboratory Name">
             </div>
         </div>
@@ -79,6 +79,8 @@ disable_auth_check: true
   const resetRequest = document.getElementById('reset-request');
   const sendResetBtn = document.getElementById('send-reset');
   const cancelResetBtn = document.getElementById('cancel-reset');
+  const passwordWrapper = document.getElementById('password-wrapper');
+  const primaryAction = primaryBtn; // Alias for consistency
 
   // Input fields
   const emailInput = document.getElementById('email');
@@ -116,12 +118,22 @@ disable_auth_check: true
       primaryBtn.textContent = 'Create Account';
       toggleBtn.textContent = 'Have an account? Login';
       forgotRow.style.display = 'none';
+      // Enable required validation for signup fields
+      fullNameInput.required = true;
+      cityInput.required = true;
+      countryInput.required = true;
+      labNameInput.required = true;
     } else {
       formTitle.textContent = 'Login';
       signupExtra.style.display = 'none';
       primaryBtn.textContent = 'Login';
       toggleBtn.textContent = 'Need an account? Sign Up';
       forgotRow.style.display = 'block';
+      // Disable required validation for signup fields when in login mode
+      fullNameInput.required = false;
+      cityInput.required = false;
+      countryInput.required = false;
+      labNameInput.required = false;
     }
     resetRequest.style.display = 'none';
   }
@@ -134,11 +146,17 @@ disable_auth_check: true
     clearMessages();
     resetRequest.style.display = 'block';
     forgotRow.style.display = 'none';
+    passwordWrapper.style.display = 'none'; // Hide password field
+    primaryAction.style.display = 'none'; // Hide login button
+    toggleBtn.style.display = 'none'; // Hide signup toggle
   });
 
   cancelResetBtn.addEventListener('click', ()=>{
     resetRequest.style.display = 'none';
     forgotRow.style.display = 'block';
+    passwordWrapper.style.display = 'block'; // Show password field
+    primaryAction.style.display = 'block'; // Show login button
+    toggleBtn.style.display = 'block'; // Show signup toggle
     clearMessages();
   });
 
@@ -185,6 +203,19 @@ disable_auth_check: true
       return;
     }
 
+    // Validate all required fields for signup
+    if(isSignup){
+      const fullName = fullNameInput.value.trim();
+      const city = cityInput.value.trim();
+      const country = countryInput.value.trim();
+      const labName = labNameInput.value.trim();
+
+      if(!fullName || !city || !country || !labName){
+        showError('All fields are required for account creation.');
+        return;
+      }
+    }
+
     const originalText = primaryBtn.textContent;
     primaryBtn.textContent = isSignup ? 'Creating Account...' : 'Logging in...';
     primaryBtn.disabled = true;
@@ -210,12 +241,14 @@ disable_auth_check: true
         const msg = 'Account created! Please check your email to confirm your account.';
         setMode(false); // Return to login mode (clears messages)
         // Show success message AFTER setMode
-        successMessage.textContent = msg;
-        successMessage.style.display='block';
+        showSuccess(msg);
         form.reset();
       } else {
         // Login success - will auto-redirect via checkAuth
-        window.location.href = siteUrl('/');
+        showSuccess('Login successful! Redirecting...');
+        setTimeout(() => {
+          window.location.href = siteUrl('/');
+        }, 500);
       }
     } else {
       showError(result.error || 'Authentication failed.');

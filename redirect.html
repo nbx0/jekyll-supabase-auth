@@ -1,0 +1,31 @@
+---
+layout: none
+permalink: /redirect.html
+---
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Redirecting...</title>
+    <script>
+    // Handle Supabase auth redirects that land without the baseurl
+    (function(){
+      var base = '{{ site.baseurl }}';
+      var hash = window.location.hash;
+      
+      // If we have auth tokens in the hash, redirect to the base URL
+      if (hash && hash.indexOf('access_token=') !== -1) {
+        var target = base.replace(/\/$/, '') + '/' + hash;
+        console.log('[redirect] Redirecting to:', target);
+        window.location.replace(target);
+      } else {
+        // No auth tokens, just redirect to base URL
+        window.location.replace(base || '/');
+      }
+    })();
+    </script>
+</head>
+<body>
+    <p style="text-align: center; margin-top: 50px;">Redirecting...</p>
+</body>
+</html>
