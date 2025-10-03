@@ -20,15 +20,31 @@ async function checkAuth() {
         siteUrl('/login.html'), siteUrl('/login'), siteUrl('/login/'),
         siteUrl('/reset-password'), siteUrl('/reset-password/'), siteUrl('/reset-password.html')
     ];
+    // Detect recovery hash (Supabase adds #access_token=...&type=recovery)
+    const hashParams = new URLSearchParams(window.location.hash.replace('#','?'));
+    const isRecovery = hashParams.get('type') === 'recovery';
+    const resetPathVariants = [siteUrl('/reset-password'), siteUrl('/reset-password/'), siteUrl('/reset-password.html')];
+    const onResetPage = resetPathVariants.includes(pathname);
+
+    if (isRecovery && !onResetPage) {
+        // Force user to the dedicated reset page, preserve hash so session is established there
+        window.location.replace(siteUrl('/reset-password/') + window.location.hash);
+        return; // Stop further redirects
+    }
 
     if (session) {
-        // User is authenticated
-        showAuthenticatedState(session.user);
-        if (loginPaths.includes(pathname)) {
-            window.location.href = siteUrl('/');
+        // During recovery we do NOT auto-redirect away after auth until password is updated
+        if (!isRecovery) {
+            showAuthenticatedState(session.user);
+            if (loginPaths.includes(pathname)) {
+                window.location.href = siteUrl('/');
+                return;
+            }
+        } else {
+            // Minimal state update to show user email if reset page header has nav
+            showAuthenticatedState(session.user);
         }
     } else {
-        // User is not authenticated
         showUnauthenticatedState();
         if (!loginPaths.includes(pathname)) {
             window.location.href = siteUrl('/login/');
