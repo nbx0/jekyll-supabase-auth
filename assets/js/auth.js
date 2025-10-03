@@ -26,6 +26,7 @@ async function checkAuth() {
     // Allow pages to disable checkAuth by setting window.disableAuthCheck
     if (window.disableAuthCheck === true) {
         console.log('[auth.js] checkAuth disabled by page');
+        document.body.classList.add('auth-checked');
         return;
     }
 
@@ -59,10 +60,16 @@ async function checkAuth() {
             // Minimal state update to show user email if reset page header has nav
             showAuthenticatedState(session.user);
         }
+        // User is authenticated, show content
+        document.body.classList.add('auth-checked');
     } else {
         showUnauthenticatedState();
         if (!loginPaths.includes(pathname)) {
+            // User is not authenticated, redirect to login
             window.location.href = siteUrl('/login/');
+        } else {
+            // On login page, show content
+            document.body.classList.add('auth-checked');
         }
     }
 }
