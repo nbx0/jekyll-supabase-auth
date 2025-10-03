@@ -3,6 +3,24 @@ layout: page
 title: Welcome to Our Site
 ---
 
+<script>
+// Handle auth redirects from email (signup confirmation, password reset)
+// This runs before the page content loads
+(function(){
+    const hash = window.location.hash;
+    const base = '{{ site.baseurl }}';
+    
+    // Check if this is an auth redirect with access token
+    if (hash && hash.includes('access_token=')) {
+        console.log('[index] Auth redirect detected, preserving hash');
+        
+        // If we're at root and have a baseurl, we're on GitHub Pages
+        // The auth token is in the hash, we need to stay here but let auth.js handle it
+        // No redirect needed - auth.js will process the session
+    }
+})();
+</script>
+
 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
 
 <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
