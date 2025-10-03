@@ -339,6 +339,12 @@ permalink: /login/index.html
             errorMessage.style.display='block';
             return;
         }
+        
+        // Disable button and show loading
+        primaryActionBtn.disabled = true;
+        const originalText = primaryActionBtn.textContent;
+        primaryActionBtn.textContent = signupMode ? 'Creating Account...' : 'Logging in...';
+        
         if (signupMode) {
             const meta = {
                 full_name: document.getElementById('full_name').value.trim(),
@@ -367,6 +373,8 @@ permalink: /login/index.html
             } else {
                 errorMessage.textContent = result.error;
                 errorMessage.style.display='block';
+                primaryActionBtn.disabled = false;
+                primaryActionBtn.textContent = originalText;
             }
         } else {
             const result = await handleLogin(email, password);
@@ -377,6 +385,8 @@ permalink: /login/index.html
             } else {
                 errorMessage.textContent=result.error;
                 errorMessage.style.display='block';
+                primaryActionBtn.disabled = false;
+                primaryActionBtn.textContent = originalText;
             }
         }
     });

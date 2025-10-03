@@ -89,12 +89,23 @@ function showUnauthenticatedState() {
 
 // Handle logout
 async function handleLogout() {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.disabled = true;
+        logoutBtn.textContent = 'Logging out...';
+    }
+    
     const { error } = await supabase.auth.signOut();
     
     if (error) {
         console.error('Error logging out:', error);
-        alert('Error logging out');
+        alert('Error logging out: ' + error.message);
+        if (logoutBtn) {
+            logoutBtn.disabled = false;
+            logoutBtn.textContent = 'Logout';
+        }
     } else {
+        console.log('Logout successful, redirecting...');
         window.location.href = siteUrl('/login/');
     }
 }
