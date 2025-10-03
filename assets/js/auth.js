@@ -23,6 +23,8 @@ function siteUrl(path) {
 
 // Check authentication status
 async function checkAuth() {
+    console.log('[auth.js] checkAuth started');
+    
     // Allow pages to disable checkAuth by setting window.disableAuthCheck
     if (window.disableAuthCheck === true) {
         console.log('[auth.js] checkAuth disabled by page');
@@ -30,7 +32,9 @@ async function checkAuth() {
         return;
     }
 
+    console.log('[auth.js] Getting session from Supabase...');
     const { data: { session } } = await supabase.auth.getSession();
+    console.log('[auth.js] Session:', session ? 'EXISTS' : 'NULL');
     const pathname = window.location.pathname;
     const loginPaths = [
         siteUrl('/login.html'), siteUrl('/login'), siteUrl('/login/'),
@@ -49,10 +53,12 @@ async function checkAuth() {
     }
 
     if (session) {
+        console.log('[auth.js] User is authenticated');
         // During recovery we do NOT auto-redirect away after auth until password is updated
         if (!isRecovery) {
             showAuthenticatedState(session.user);
             if (loginPaths.includes(pathname)) {
+                console.log('[auth.js] On login page with session, redirecting to home');
                 window.location.href = siteUrl('/');
                 return;
             }
@@ -61,14 +67,18 @@ async function checkAuth() {
             showAuthenticatedState(session.user);
         }
         // User is authenticated, show content
+        console.log('[auth.js] Adding auth-checked class - showing content');
         document.body.classList.add('auth-checked');
     } else {
+        console.log('[auth.js] No session found');
         showUnauthenticatedState();
         if (!loginPaths.includes(pathname)) {
             // User is not authenticated, redirect to login
+            console.log('[auth.js] Not on login page, redirecting to login');
             window.location.href = siteUrl('/login/');
         } else {
             // On login page, show content
+            console.log('[auth.js] On login page, showing login form');
             document.body.classList.add('auth-checked');
         }
     }
@@ -203,6 +213,7 @@ async function updatePassword(newPassword) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[auth.js] DOMContentLoaded - running checkAuth');
     checkAuth();
     
     // Setup logout button
@@ -211,3 +222,17 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.addEventListener('click', handleLogout);
     }
 });
+
+// Also run checkAuth immediately if DOM is already loaded
+if (document.readyState === 'loading') {
+    console.log('[auth.js] Document still loading, waiting for DOMContentLoaded');
+} else {
+    console.log('[auth.js] Document already loaded, running checkAuth immediately');
+    checkAuth().then(() => {
+        // Setup logout button
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', handleLogout);
+        }
+    });
+}

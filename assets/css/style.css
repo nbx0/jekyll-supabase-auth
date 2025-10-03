@@ -12,10 +12,8 @@ body {
 }
 
 /* Hide protected content until auth check completes */
-body:not(.auth-checked) main {
-    visibility: hidden;
-}
-
+body:not(.auth-checked) header,
+body:not(.auth-checked) main,
 body:not(.auth-checked) footer {
     visibility: hidden;
 }
@@ -27,8 +25,10 @@ body:not(.auth-checked)::before {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 1.2rem;
+    font-size: 1.5rem;
+    font-weight: 600;
     color: #2c3e50;
+    z-index: 9999;
 }
 
 .container {

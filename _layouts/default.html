@@ -16,6 +16,10 @@
     window.location.replace(target);
   }
 })();
+{% if page.disable_auth_check %}
+// Disable auth redirect on this page
+window.disableAuthCheck = true;
+{% endif %}
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>

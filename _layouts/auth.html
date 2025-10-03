@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page.title | default: "Authentication" }}</title>
     <link rel="stylesheet" href="{{ '/assets/css/auth.css' | relative_url }}">
-    <script>window.BASE_URL='{{ site.baseurl }}';</script>
+    <script>window.BASE_URL='{{ site.baseurl }}';
+{% if page.disable_auth_check %}
+// Disable auth redirect on this page
+window.disableAuthCheck = true;
+{% endif %}
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
